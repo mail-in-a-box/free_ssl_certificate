@@ -43,11 +43,12 @@ class HTTPValidation(DomainValidationMethod):
 
 def issue_certificate(
         domains, account_cache_directory,
-        agree_to_tos_url=None, 
+        agree_to_tos_url=None,
         validation_method=HTTPValidation(),
         certificate_file=None,
         certificate_chain_file=APPEND_CHAIN,
-        private_key=None, private_key_file=None, csr=None,
+        private_key=None, private_key_file=None,
+        private_key_size=2048, csr=None,
         self_signed=None,
         acme_server=LETSENCRYPT_SERVER,
         logger=lambda s : None,
@@ -66,7 +67,7 @@ def issue_certificate(
     # Domains are now validated. Generate a private key, CSR, and certificate.
 
     # Load or generate a private key.
-    (private_key, private_key_pem) = generate_private_key(private_key, private_key_file, logger)
+    (private_key, private_key_pem) = generate_private_key(private_key, private_key_file, private_key_size, logger)
 
     if not self_signed:
         # Load or generate a certificate signing request.
@@ -140,7 +141,9 @@ def validate_domain_ownership(
     return (client, challgs)
 
 
-def generate_private_key(private_key, private_key_file, logger):
+def generate_private_key(
+        private_key, private_key_file, private_key_size, logger
+        ):
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import serialization
     from cryptography.hazmat.primitives.asymmetric import rsa
@@ -155,7 +158,7 @@ def generate_private_key(private_key, private_key_file, logger):
     if private_key is None:
         # Generate a new private key if not given to us.
         logger("Generating a new private key.")
-        private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())
+        private_key = rsa.generate_private_key(public_exponent=65537, key_size=private_key_size, backend=default_backend())
         private_key_pem = private_key.private_bytes(encoding=serialization.Encoding.PEM, format=serialization.PrivateFormat.TraditionalOpenSSL, encryption_algorithm=serialization.NoEncryption())
 
     elif isinstance(private_key, bytes):

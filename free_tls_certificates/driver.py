@@ -61,6 +61,7 @@ def parse_command_line():
     acme_server = LETSENCRYPT_SERVER
     self_signed = False
     append_well_known_acme_challenge = True
+    private_key_size = 2048
     while True:
         if args[0] == "--server":
             args.pop(0)
@@ -77,13 +78,20 @@ def parse_command_line():
             args.pop(0)
             append_well_known_acme_challenge = False
             continue
+        if args[0] == "--private-key-size":
+            args.pop(0)
+            private_key_size = args.pop(0)
+            if private_key_size not in ["1024", "2048", "4096"]:
+                raise Exception("Key size must be 1024, 2048 or 4096.")
+            private_key_size = int(private_key_size)
+            continue
         break
 
     # Get the ACME arguments.
     if not self_signed:
         if len(args) < 2:
             raise Exception("Not enough command-line arguments.")
-        
+
         acme_account_path = args.pop(-1)
         static_path = args.pop(-1)
 
@@ -115,6 +123,7 @@ def parse_command_line():
         "acme_server": acme_server,
         "domains": domains,
         "private_key_fn": private_key_fn,
+        "private_key_size": private_key_size,
         "certificate_fn": certificate_fn,
         "static_path": static_path,
         "acme_account_path": acme_account_path,
@@ -193,6 +202,7 @@ def provision_certificate(opts):
                 opts["acme_account_path"],
                 certificate_file=opts["certificate_fn"],
                 private_key_file=opts["private_key_fn"],
+                private_key_size=opts["private_key_size"],
                 agree_to_tos_url=agree_to_tos_url,
                 acme_server=opts["acme_server"],
                 self_signed=opts["self_signed"],
@@ -225,7 +235,7 @@ provision your TLS certificate. If you don't agree, this program stops.
 Do you agree to the agreement? Type Y or N and press <ENTER>: """
                  % e.url)
             sys.stdout.flush()
-            
+
             if sys.stdin.readline().strip().upper() != "Y":
                 print("\nYou didn't agree. Quitting.")
                 sys.exit(1)
@@ -318,4 +328,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
