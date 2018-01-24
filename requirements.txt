@@ -1,3 +1,4 @@
 cryptography
 acme>=0.2.0
 idna
+josepy
