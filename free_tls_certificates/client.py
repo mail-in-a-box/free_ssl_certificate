@@ -11,6 +11,8 @@ import acme.client
 import acme.messages
 import acme.challenges
 
+import josepy as jose
+
 import OpenSSL.crypto
 
 import idna
@@ -191,7 +193,7 @@ def parse_or_generate_csr(domains, csr, private_key, logger):
 
 def request_certificate_issuance(client, challgs, csr, logger):
     # Convert the OpenSSL.crypto.X509Req to a ComparableX509 expected by request_issuance.
-    csr = acme.jose.util.ComparableX509(csr)
+    csr = jose.util.ComparableX509(csr)
 
     # Request a certificate using the CSR and some number of domain validation challenges.
     logger("Requesting a certificate.")
@@ -334,7 +336,6 @@ def create_client(account_key_file, registration_file, log, agree_to_tos_url=Non
 # loading it from keyfile if the file exists, otherwise generating
 # a new key and writing it to that file.
 def load_or_generate_private_key(keyfile, log):
-    from acme import jose
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives.asymmetric import rsa
     from cryptography.hazmat.primitives import serialization
