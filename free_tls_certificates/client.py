@@ -430,8 +430,15 @@ def submit_domain_validation(client, regr, account, challenges_file, domain, val
     elif challg.status.name == "invalid":
         # Challenge was rejected. The ACME server requested the
         # HTTP validation resource but got a 404, for instance.
-        message = '; '.join(c.error.detail for c in challg.challenges if c.status.name == "invalid")
-        log("The %s challenge for %s failed: %s." % (validation_method, domain, message))
+        message = '; '.join(
+            c.error.detail if c.error else c.uri
+            for c in challg.challenges if c.status.name == "invalid"
+        )
+        log("The %s challenge for %s failed: %s." % (
+            validation_method,
+            domain,
+            message,
+        ))
         raise ChallengeFailed(validation_method, domain, message, challg1.uri)
 
     elif challg.status.name not in ("pending", "processing"):
